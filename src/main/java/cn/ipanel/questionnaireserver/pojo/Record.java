@@ -1,0 +1,48 @@
+package cn.ipanel.questionnaireserver.pojo;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
+import lombok.Data;
+
+@ApiModel(value="cn.ipanel.questionnaireserver.pojo.Record")
+@Data
+@TableName(value = "record")
+public class Record implements Serializable {
+     @TableId(value = "id", type = IdType.INPUT)
+    @ApiModelProperty(value="null")
+    private Integer id;
+
+    /**
+     * 问卷id
+     */
+    @TableField(value = "questionnaire_id")
+    @ApiModelProperty(value="问卷id")
+    private Integer questionnaireId;
+
+    /**
+     * 问题id
+     */
+    @TableField(value = "question_id")
+    @ApiModelProperty(value="问题id")
+    private Integer questionId;
+
+    /**
+     * 问卷回答结果
+     */
+    @TableField(value = "answer")
+    @ApiModelProperty(value="问卷回答结果")
+    private String answer;
+
+    private static final long serialVersionUID = 1L;
+
+    public static final String COL_QUESTIONNAIRE_ID = "questionnaire_id";
+
+    public static final String COL_QUESTION_ID = "question_id";
+
+    public static final String COL_ANSWER = "answer";
+}

@@ -18,7 +18,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
-  type-aliases-package: cn.ipanel.questionnaireapp.pojo
+  type-aliases-package: cn.ipanel.questionnaireserver.pojo
   configuration:
     #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
@@ -31,7 +31,7 @@ logging:
   config: classpath:logback-spring.xml
   path: /logs
   level:
-    cn.ipanel.questionnaireapp.dao: debug
+    cn.ipanel.questionnaireserver.dao: debug
     io:
       swagger:
         models:

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。-->
+<!--scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。-->
+<!--debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。-->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="/var/tmp"/>
+    <springProperty scope="context" name="appName" source="spring.application.name"
+                    defaultValue="SpringBootApplication"/>
+    <!--    <property name="APP_NAME" value="h5agent"/>-->
+    <!--    <contextName>${APP_NAME}</contextName>-->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <jmxConfigurator/>
+
+    <logger name="org.springframework.web" level="INFO"/>
+
+    <appender name="dailyRollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rolling over -->
+            <FileNamePattern>${logPath}/${appName}.%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <!-- 除按日志记录之外，还配置了日志文件不能超过2M，若超过5M，日志文件会以索引0开始， 命名日志文件，例如log-error-2013-12-21.0.log -->
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>5MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 保持 30 days' 日志 log history -->
+            <!--            <maxHistory>30</maxHistory>-->
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg %n</Pattern>
+        </encoder>
+    </appender>
+    <!--TRACE, DEBUG, INFO, WARN, ERROR-->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="dailyRollingFileAppender"/>
+    </root>
+</configuration>
