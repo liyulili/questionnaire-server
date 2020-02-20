@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: questionnaire-server
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/questionnaire
+    username: root
+    password: 123456
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  type-aliases-package: cn.ipanel.questionnaireapp.pojo
+  configuration:
+    #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  config: classpath:logback-spring.xml
+  path: /logs
+  level:
+    cn.ipanel.questionnaireapp.dao: debug
+    io:
+      swagger:
+        models:
+          parameters:
+            AbstractSerializableParameter: error
