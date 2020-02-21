@@ -37,3 +37,7 @@ logging:
         models:
           parameters:
             AbstractSerializableParameter: error
+
+idworker:
+  workerId: 1
+  dataCenterId: 1

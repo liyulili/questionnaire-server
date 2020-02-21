@@ -15,7 +15,7 @@ import lombok.Data;
 public class Record implements Serializable {
      @TableId(value = "id", type = IdType.INPUT)
     @ApiModelProperty(value="null")
-    private Integer id;
+    private Long id;
 
     /**
      * 问卷id

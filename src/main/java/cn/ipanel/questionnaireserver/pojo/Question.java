@@ -18,14 +18,14 @@ public class Question implements Serializable {
      */
      @TableId(value = "id", type = IdType.AUTO)
     @ApiModelProperty(value="题目id")
-    private Integer id;
+    private Long id;
 
     /**
      * 问卷id
      */
     @TableField(value = "questionnaire_id")
     @ApiModelProperty(value="问卷id")
-    private Integer questionnaireId;
+    private Long questionnaireId;
 
     /**
      * 题目类型{1：单选，2：多选，3：文本，4：附件上传}

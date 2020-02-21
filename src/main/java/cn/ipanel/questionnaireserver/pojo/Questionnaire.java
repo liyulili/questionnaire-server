@@ -7,11 +7,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @ApiModel(value="cn.ipanel.questionnaireserver.pojo.Questionnaire")
 @Data
+@Accessors(chain = true)
 @TableName(value = "questionnaire")
 public class Questionnaire implements Serializable {
     /**
@@ -19,7 +23,7 @@ public class Questionnaire implements Serializable {
      */
      @TableId(value = "id", type = IdType.INPUT)
     @ApiModelProperty(value="问卷id,由自增算法实现,用于标识问卷")
-    private Integer id;
+    private Long id;
 
     /**
      * 问卷标题
@@ -44,15 +48,15 @@ public class Questionnaire implements Serializable {
 
     @TableField(value = "createTime")
     @ApiModelProperty(value="null")
-    private Date createtime;
+    private LocalDateTime createTime;
 
     @TableField(value = "startTime")
     @ApiModelProperty(value="null")
-    private Date starttime;
+    private LocalDateTime startTime;
 
     @TableField(value = "endTime")
     @ApiModelProperty(value="null")
-    private Date endtime;
+    private LocalDateTime endTime;
 
     private static final long serialVersionUID = 1L;
 
@@ -67,4 +71,5 @@ public class Questionnaire implements Serializable {
     public static final String COL_STARTTIME = "startTime";
 
     public static final String COL_ENDTIME = "endTime";
+
 }
