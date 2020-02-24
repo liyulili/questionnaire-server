@@ -13,6 +13,7 @@ import cn.ipanel.questionnaireserver.vo.R;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,15 +110,33 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
     @Override
     public R queryQuestionnaire(String startTime, String endTime, Integer status, Integer sortType) {
-        return null;
+
+        List<Questionnaire> questionnaireList = questionnaireMapper.selectList(
+                new QueryWrapper<Questionnaire>().lambda()
+                        .eq(status != null, Questionnaire::getStatus, status)
+                        .ge(StringUtils.isNotBlank(startTime), Questionnaire::getStartTime, LocalDateTime.parse(startTime, formatter))
+                        .le(StringUtils.isNotBlank(endTime), Questionnaire::getEndTime, LocalDateTime.parse(endTime, formatter))
+                        .orderByAsc(sortType == 1, Questionnaire::getCreateTime)
+                        .orderByDesc(sortType == 2, Questionnaire::getCreateTime));
+
+        return R.ok(questionnaireList);
+    }
+
+    @Override
+    public R queryQuestion(Long questionnaireId) {
+
+        List<Question> questionList = questionMapper.selectList(new QueryWrapper<Question>().lambda().eq(questionnaireId != null, Question::getQuestionnaireId, questionnaireId));
+
+        return R.ok(questionList);
     }
 
     /**
      * 新建问卷到数据库，返回问卷id
-     * @param title 问卷标题
+     *
+     * @param title       问卷标题
      * @param description 问卷描述
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * @param startTime   开始时间
+     * @param endTime     结束时间
      * @return 问卷id
      */
     private long addQuestionnaireToDataBase(String title, String description, String startTime, String endTime) {
