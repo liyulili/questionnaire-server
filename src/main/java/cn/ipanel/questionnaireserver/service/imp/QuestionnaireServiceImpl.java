@@ -3,6 +3,7 @@ package cn.ipanel.questionnaireserver.service.imp;
 import cn.ipanel.questionnaireserver.exception.CheckedException;
 import cn.ipanel.questionnaireserver.mapper.QuestionMapper;
 import cn.ipanel.questionnaireserver.mapper.QuestionnaireMapper;
+import cn.ipanel.questionnaireserver.mapper.RecordMapper;
 import cn.ipanel.questionnaireserver.pojo.Question;
 import cn.ipanel.questionnaireserver.pojo.Questionnaire;
 import cn.ipanel.questionnaireserver.service.IQuestionnaireService;
@@ -18,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
@@ -28,6 +32,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
     @Autowired
     QuestionMapper questionMapper;
+
+    @Autowired
+    RecordMapper recordMapper;
 
     @Autowired
     IdWorker idWorker;
@@ -64,8 +71,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         return R.ok();
     }
 
+    @Transactional
     @Override
-    public R releaseQuestionnaire(Integer questionnaireId) {
+    public R releaseQuestionnaire(Long questionnaireId) {
         List<Questionnaire> questionnaireList = questionnaireMapper.selectList(new QueryWrapper<Questionnaire>().lambda().eq(Questionnaire::getId, questionnaireId));
         if (questionnaireList.isEmpty()) {
             return R.error("未查询到相关问卷");
@@ -78,6 +86,40 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         return R.ok();
     }
 
+    @Transactional
+    @Override
+    public R deleteQuestionnaire(Long questionnaireId) {
+
+        //1.先删除问卷
+        int deleteQuestionnaire = questionnaireMapper.deleteById(questionnaireId);
+
+        //2,3可以考虑异步编程
+
+        //2.删除问题和统计
+        HashMap<String, Object> map = new HashMap<>(1);
+        map.put(Question.COL_QUESTIONNAIRE_ID, questionnaireId);
+        List<Long> questionIdList = questionMapper.selectObjs(new QueryWrapper<Question>().lambda().eq(Question::getQuestionnaireId, questionnaireId).select(Question::getId))
+                .stream().map(i -> Long.valueOf(String.valueOf(i))).collect(toList());
+        int i = questionMapper.deleteBatchIds(questionIdList);
+
+        //3.删除答题记录
+        int i1 = recordMapper.deleteByQuestionnaireIdIn(questionIdList);
+        return R.ok();
+    }
+
+    @Override
+    public R queryQuestionnaire(String startTime, String endTime, Integer status, Integer sortType) {
+        return null;
+    }
+
+    /**
+     * 新建问卷到数据库，返回问卷id
+     * @param title 问卷标题
+     * @param description 问卷描述
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 问卷id
+     */
     private long addQuestionnaireToDataBase(String title, String description, String startTime, String endTime) {
         long id = idWorker.nextId();
 

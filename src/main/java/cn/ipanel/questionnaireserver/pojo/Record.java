@@ -22,14 +22,14 @@ public class Record implements Serializable {
      */
     @TableField(value = "questionnaire_id")
     @ApiModelProperty(value="问卷id")
-    private Integer questionnaireId;
+    private Long questionnaireId;
 
     /**
      * 问题id
      */
     @TableField(value = "question_id")
     @ApiModelProperty(value="问题id")
-    private Integer questionId;
+    private Long questionId;
 
     /**
      * 问卷回答结果
