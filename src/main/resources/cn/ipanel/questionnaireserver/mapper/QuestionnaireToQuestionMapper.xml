@@ -4,8 +4,8 @@
   <resultMap id="BaseResultMap" type="cn.ipanel.questionnaireserver.pojo.QuestionnaireToQuestion">
     <!--@mbg.generated-->
     <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="questionnaireId" jdbcType="INTEGER" property="questionnaireid" />
-    <result column="questionId" jdbcType="INTEGER" property="questionid" />
+    <result column="questionnaireId" jdbcType="INTEGER" property="questionnaireId" />
+    <result column="questionId" jdbcType="INTEGER" property="questionId" />
     <result column="statistics" jdbcType="VARCHAR" property="statistics" />
     <result column="order" jdbcType="VARCHAR" property="order" />
   </resultMap>
