@@ -64,4 +64,21 @@ public interface IQuestionnaireService {
      * @return
      */
     R queryQuestion(Long questionnaireId);
+
+    /**
+     * 添加问题到问卷
+     * @param question
+     * @param questionnaireId
+     * @param order
+     * @return
+     */
+    R addQuestionToQuestionnaire(Question question,Long questionnaireId,Integer order);
+
+    /**
+     * 批量添加题库的问题到问卷
+     * @param questionIds
+     * @param questionnaireId
+     * @return
+     */
+    R addQuestionToQuestionnaire(Long[] questionIds,Long questionnaireId);
 }

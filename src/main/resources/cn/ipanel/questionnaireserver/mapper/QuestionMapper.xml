@@ -4,16 +4,14 @@
   <resultMap id="BaseResultMap" type="cn.ipanel.questionnaireserver.pojo.Question">
     <!--@mbg.generated-->
     <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="questionnaire_id" jdbcType="INTEGER" property="questionnaireId" />
     <result column="question_type" jdbcType="INTEGER" property="questionType" />
     <result column="required" jdbcType="INTEGER" property="required" />
     <result column="title" jdbcType="LONGVARCHAR" property="title" />
     <result column="body" jdbcType="LONGVARCHAR" property="body" />
-    <result column="statistics" jdbcType="LONGVARCHAR" property="statistics" />
-    <result column="order" jdbcType="INTEGER" property="order" />
+    <result column="question_bank" jdbcType="INTEGER" property="questionBank" />
   </resultMap>
   <sql id="Base_Column_List">
     <!--@mbg.generated-->
-    id, questionnaire_id, question_type, required, title, body, `statistics`, `order`
+    id, question_type, required, title, body, question_bank
   </sql>
 </mapper>

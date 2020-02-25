@@ -19,12 +19,14 @@ public class QuestionnaireController {
     IQuestionnaireService questionnaireService;
 
 
+    @RequestMapping("/addQuestionnaire")
     public R addQuestionnaire(String title, String description, String startTime, String endTime) {
 
         log.info("addQuestionnaire params: title={},description={},startTime={},endTime={}", title, description, startTime, endTime);
         return questionnaireService.addQuestionnaire(title, description, startTime, endTime);
     }
 
+    @RequestMapping("/releaseQuestionnaire")
     public R releaseQuestionnaire(Long questionnaireId) {
         log.info("releaseQuestionnaire params: questionnaireId={}", questionnaireId);
         return questionnaireService.releaseQuestionnaire(questionnaireId);

@@ -3,9 +3,12 @@ package cn.ipanel.questionnaireserver.service.imp;
 import cn.ipanel.questionnaireserver.exception.CheckedException;
 import cn.ipanel.questionnaireserver.mapper.QuestionMapper;
 import cn.ipanel.questionnaireserver.mapper.QuestionnaireMapper;
+import cn.ipanel.questionnaireserver.mapper.QuestionnaireToQuestionMapper;
 import cn.ipanel.questionnaireserver.mapper.RecordMapper;
 import cn.ipanel.questionnaireserver.pojo.Question;
 import cn.ipanel.questionnaireserver.pojo.Questionnaire;
+import cn.ipanel.questionnaireserver.pojo.QuestionnaireToQuestion;
+import cn.ipanel.questionnaireserver.pojo.Record;
 import cn.ipanel.questionnaireserver.service.IQuestionnaireService;
 import cn.ipanel.questionnaireserver.util.Constant;
 import cn.ipanel.questionnaireserver.util.IdWorker;
@@ -13,6 +16,7 @@ import cn.ipanel.questionnaireserver.vo.R;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,10 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
@@ -36,6 +39,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
     @Autowired
     RecordMapper recordMapper;
+
+    @Autowired
+    QuestionnaireToQuestionMapper questionnaireToQuestionMapper;
 
     @Autowired
     IdWorker idWorker;
@@ -63,8 +69,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
         //解析Question
         questionList.forEach(question -> {
-            question.setQuestionnaireId(id);
             int insert = questionMapper.insert(question);
+            QuestionnaireToQuestion questionnaireToQuestion = new QuestionnaireToQuestion().setQuestionnaireId(id).setQuestionId((long) insert);
+            int insert1 = questionnaireToQuestionMapper.insert(questionnaireToQuestion);
             if (insert != 1) {
                 throw new CheckedException("插入数据库失败");
             }
@@ -97,14 +104,15 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         //2,3可以考虑异步编程
 
         //2.删除问题和统计
-        HashMap<String, Object> map = new HashMap<>(1);
-        map.put(Question.COL_QUESTIONNAIRE_ID, questionnaireId);
-        List<Long> questionIdList = questionMapper.selectObjs(new QueryWrapper<Question>().lambda().eq(Question::getQuestionnaireId, questionnaireId).select(Question::getId))
-                .stream().map(i -> Long.valueOf(String.valueOf(i))).collect(toList());
-        int i = questionMapper.deleteBatchIds(questionIdList);
+        HashMap<String, Object> map = Maps.newHashMapWithExpectedSize(1);
+        map.put(QuestionnaireToQuestion.COL_QUESTIONNAIREID, questionnaireId);
+        int deleteByMap = questionnaireToQuestionMapper.deleteByMap(map);
+        //TODO 删除非题库标记的问题
 
         //3.删除答题记录
-        int i1 = recordMapper.deleteByQuestionnaireIdIn(questionIdList);
+        map.clear();
+        map.put(Record.COL_QUESTIONNAIRE_ID, questionnaireId);
+        int i1 = recordMapper.deleteByMap(map);
         return R.ok();
     }
 
@@ -125,9 +133,36 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     @Override
     public R queryQuestion(Long questionnaireId) {
 
-        List<Question> questionList = questionMapper.selectList(new QueryWrapper<Question>().lambda().eq(questionnaireId != null, Question::getQuestionnaireId, questionnaireId));
+        List<Question> questionList = questionMapper.selectList(new QueryWrapper<Question>().lambda()
+                .inSql(Question::getId, "select question_id from questionnaire_to_question where questionnaire_id =" + questionnaireId));
 
         return R.ok(questionList);
+    }
+
+    @Transactional
+    @Override
+    public R addQuestionToQuestionnaire(Question question, Long questionnaireId, Integer order) {
+        question.setId(null);
+        questionMapper.insert(question);
+        QuestionnaireToQuestion questionnaireToQuestion = new QuestionnaireToQuestion()
+                .setQuestionId(question.getId())
+                .setQuestionnaireId(questionnaireId)
+                .setOrder(order);
+        questionnaireToQuestionMapper.insert(questionnaireToQuestion);
+        return R.ok();
+    }
+
+    @Transactional
+    @Override
+    public R addQuestionToQuestionnaire(Long[] questionIds, Long questionnaireId) {
+
+        for (int i = 0; i < questionIds.length; i++) {
+            questionnaireToQuestionMapper.insert(new QuestionnaireToQuestion()
+                    .setQuestionId(questionIds[i])
+                    .setQuestionnaireId(questionnaireId));
+        }
+
+        return R.ok();
     }
 
     /**
