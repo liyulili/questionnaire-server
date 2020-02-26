@@ -15,5 +15,8 @@ public interface RecordMapper extends BaseMapper<Record> {
 
     int deleteByQuestionnaireIdIn(@Param("questionnaireIdCollection") Collection<Long> questionnaireIdCollection);
 
+    int insertList(@Param("list")List<Record> list);
+
+
 
 }

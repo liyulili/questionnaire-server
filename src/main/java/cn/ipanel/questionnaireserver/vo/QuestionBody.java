@@ -7,11 +7,12 @@ import java.util.List;
 /**
  * @author liyu
  * @date 2020/1/20 10:04
- * @description
+ * @description question实体类中body映射
  */
 @Data
 public class QuestionBody {
-    private String title;
-    private List<QuestionBodyCell> body;
-    private String standardAnswer;
+    public String code;
+    public String content;
+    public String desc;
+    public String pic;
 }

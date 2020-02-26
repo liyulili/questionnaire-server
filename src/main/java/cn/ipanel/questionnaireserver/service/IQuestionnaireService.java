@@ -4,6 +4,7 @@ import cn.ipanel.questionnaireserver.pojo.Question;
 import cn.ipanel.questionnaireserver.vo.R;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IQuestionnaireService {
 
@@ -81,4 +82,13 @@ public interface IQuestionnaireService {
      * @return
      */
     R addQuestionToQuestionnaire(Long[] questionIds,Long questionnaireId);
+
+    /**
+     * 提交试卷
+     * @param questionnaireId
+     * @param answers
+     * @return
+     */
+    R submitQuestionnaire(Long questionnaireId, Map<Long,String> answers);
+
 }

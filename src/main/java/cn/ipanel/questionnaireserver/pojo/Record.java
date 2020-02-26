@@ -8,10 +8,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @ApiModel(value="cn.ipanel.questionnaireserver.pojo.Record")
 @Data
 @TableName(value = "record")
+@Accessors(chain = true)
 public class Record implements Serializable {
      @TableId(value = "id", type = IdType.INPUT)
     @ApiModelProperty(value="null")

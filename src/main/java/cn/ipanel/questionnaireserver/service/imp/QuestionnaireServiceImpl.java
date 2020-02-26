@@ -24,9 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
@@ -161,6 +159,27 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                     .setQuestionId(questionIds[i])
                     .setQuestionnaireId(questionnaireId));
         }
+
+        return R.ok();
+    }
+
+    @Override
+    public R submitQuestionnaire(Long questionnaireId, Map<Long, String> answers) {
+
+        //储存记录
+        List recordList = new ArrayList();
+        answers.forEach((id, answer) -> recordList.add(new Record()
+                .setQuestionnaireId(questionnaireId)
+                .setQuestionId(id)
+                .setAnswer(answer))
+
+        );
+        int i = recordMapper.insertList(recordList);
+
+        //统计数据，选择题统计各项票数，非选择题统计有效数
+        List<QuestionnaireToQuestion> questionnaireToQuestionList = questionnaireToQuestionMapper.selectAllByQuestionnaireId(questionnaireId);
+
+
 
         return R.ok();
     }

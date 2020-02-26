@@ -22,11 +22,11 @@ public class QuestionnaireTest {
     public void testInsertQuestion() {
         Question question = new Question()
                 .setId(null)
-                .setBody("[{var:1},{var:2}]")
+                .setBody("[{\"code\": \"A\",\"content\": \"紫色\",\"desc\": \"\",\"pic\": \"http://xxxxxx\"},{\"code\": \"B\",\"content\": \"绿色\",\"desc\": \"\",\"pic\": \"http://xxxxxx\"},{\"code\": \"C\",\"content\": \"蓝色\",\"desc\": \"\",\"pic\": \"http://xxxxxx\"}]")
                 .setQuestionBank(1)
                 .setQuestionType(1)
                 .setRequired(1)
-                .setTitle("测试");
+                .setTitle("你最喜欢哪种颜色");
         int insert = questionMapper.insert(question);
         System.out.println("insert = " + insert);
         System.out.println("id=" + question.getId());
