@@ -15,6 +15,7 @@ import cn.ipanel.questionnaireserver.constant.QuestionConstant;
 import cn.ipanel.questionnaireserver.util.IdWorker;
 import cn.ipanel.questionnaireserver.vo.QuestionBody;
 import cn.ipanel.questionnaireserver.vo.QuestionStatistics;
+import cn.ipanel.questionnaireserver.vo.QuestionnaireResult;
 import cn.ipanel.questionnaireserver.vo.R;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -123,7 +124,8 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     public R queryQuestionnaire(String startTime, String endTime, Integer status, Integer sortType) {
 
         List<Questionnaire> questionnaireList = questionnaireMapper.selectList(
-                new QueryWrapper<Questionnaire>().lambda()
+                new QueryWrapper<Questionnaire>()
+                        .lambda()
                         .eq(status != null, Questionnaire::getStatus, status)
                         .ge(StringUtils.isNotBlank(startTime), Questionnaire::getStartTime, LocalDateTime.parse(startTime, formatter))
                         .le(StringUtils.isNotBlank(endTime), Questionnaire::getEndTime, LocalDateTime.parse(endTime, formatter))
@@ -191,47 +193,93 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                 //没有记录时
                 if (StringUtils.isBlank(questionnaireToQuestion.getStatistics())) {
 
-                    if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
-                            || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
-                        List<QuestionStatistics> questionStatisticsList = JSON.parseArray(question.getBody(), QuestionBody.class)
-                                .stream()
-                                .map(questionBody -> new QuestionStatistics()
-                                        .setNum(0)
-                                        .setCode(questionBody.getCode())
-                                        .setContent(questionBody.content)
-                                        .setDesc(questionBody.getDesc())
-                                        .setPic(questionBody.getPic()))
-                                .collect(Collectors.toList());
-                        questionnaireToQuestion.setStatistics(JSON.toJSONString(questionStatisticsList));
-                    } else {
-                        questionnaireToQuestion.setStatistics(String.valueOf(0));
-                    }
+                    prepareStatistics(questionnaireToQuestion, question);
                 }
 
-                //选择题
-                if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
-                        || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
-
-                    List<QuestionStatistics> statisticsList = JSON.parseArray(questionnaireToQuestion.getStatistics(), QuestionStatistics.class);
-                    statisticsList.forEach(statistics -> {
-                        String[] split = answers.get(question.getId()).trim().split("|");
-                        for (String s : split) {
-                            if (statistics.getCode().equals(s)) {
-                                statistics.setNum(statistics.getNum() + 1);
-                            }
-                        }
-                    });
-
-                } else {
-                    //为其他类型题目是暂时考虑有效作答数，只储存数量
-                    int num = Integer.parseInt(questionnaireToQuestion.getStatistics());
-                    questionnaireToQuestion.setStatistics(String.valueOf(num + 1));
-                }
+                countAnswerStatistics(answers, questionnaireToQuestion, question);
                 //将数据更新到数据库
                 int updateById = questionnaireToQuestionMapper.updateById(questionnaireToQuestion);
             }
         });
         return R.ok();
+    }
+
+    @Override
+    public R queryQuestionnaireResult(Long questionnaireId) {
+
+
+        Questionnaire questionnaire = questionnaireMapper.selectById(questionnaireId);
+
+        List<QuestionnaireToQuestion> questionnaireToQuestionList = questionnaireToQuestionMapper.selectAllByQuestionnaireId(questionnaireId);
+        HashMap<Long, String> map = new HashMap<>();
+        questionnaireToQuestionList.forEach(questionnaireToQuestion -> map.put(questionnaireToQuestion.getQuestionId(), questionnaireToQuestion.getStatistics()));
+
+        List<Long> questionIdList = questionnaireToQuestionList.stream().map(QuestionnaireToQuestion::getQuestionId).collect(Collectors.toList());
+        List<Question> questionList = questionMapper.selectBatchIds(questionIdList)
+                .stream()
+                .map(question -> {
+                    if (map.get(question.getId()) != null && StringUtils.isNotBlank(map.get(question.getId()))) {
+                        question.setBody(map.get(question.getId()));
+                    }
+                    return question;
+                })
+                .collect(Collectors.toList());
+        QuestionnaireResult questionnaireResult = new QuestionnaireResult().setQuestionnaire(questionnaire).setQuestionList(questionList);
+
+        return R.ok(questionnaireResult);
+    }
+
+    /**
+     * 对初始化好的statistics字段进行统计
+     *
+     * @param answers                 提交的答案
+     * @param questionnaireToQuestion 统计记录实体类
+     * @param question                问题实体类
+     */
+    private void countAnswerStatistics(Map<Long, String> answers, QuestionnaireToQuestion questionnaireToQuestion, Question question) {
+        if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
+                || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
+
+            //选择题
+            List<QuestionStatistics> statisticsList = JSON.parseArray(questionnaireToQuestion.getStatistics(), QuestionStatistics.class);
+            statisticsList.forEach(statistics -> {
+                String[] split = answers.get(question.getId()).trim().split("|");
+                for (String s : split) {
+                    if (statistics.getCode().equals(s)) {
+                        statistics.setNum(statistics.getNum() + 1);
+                    }
+                }
+            });
+
+        } else {
+            //为其他类型题目是暂时考虑有效作答数，只储存数量
+            int num = Integer.parseInt(questionnaireToQuestion.getStatistics());
+            questionnaireToQuestion.setStatistics(String.valueOf(num + 1));
+        }
+    }
+
+    /**
+     * 对空白统计进行预填充
+     *
+     * @param questionnaireToQuestion 待统计记录实体类
+     * @param question                问题实体类
+     */
+    private void prepareStatistics(QuestionnaireToQuestion questionnaireToQuestion, Question question) {
+        if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
+                || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
+            List<QuestionStatistics> questionStatisticsList = JSON.parseArray(question.getBody(), QuestionBody.class)
+                    .stream()
+                    .map(questionBody -> new QuestionStatistics()
+                            .setNum(0)
+                            .setCode(questionBody.getCode())
+                            .setContent(questionBody.content)
+                            .setDesc(questionBody.getDesc())
+                            .setPic(questionBody.getPic()))
+                    .collect(Collectors.toList());
+            questionnaireToQuestion.setStatistics(JSON.toJSONString(questionStatisticsList));
+        } else {
+            questionnaireToQuestion.setStatistics(String.valueOf(0));
+        }
     }
 
     /**
