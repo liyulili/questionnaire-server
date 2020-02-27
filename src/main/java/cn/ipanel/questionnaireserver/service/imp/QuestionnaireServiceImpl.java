@@ -1,5 +1,6 @@
 package cn.ipanel.questionnaireserver.service.imp;
 
+import cn.ipanel.questionnaireserver.constant.QuestionnaireConstant;
 import cn.ipanel.questionnaireserver.exception.CheckedException;
 import cn.ipanel.questionnaireserver.mapper.QuestionMapper;
 import cn.ipanel.questionnaireserver.mapper.QuestionnaireMapper;
@@ -10,9 +11,12 @@ import cn.ipanel.questionnaireserver.pojo.Questionnaire;
 import cn.ipanel.questionnaireserver.pojo.QuestionnaireToQuestion;
 import cn.ipanel.questionnaireserver.pojo.Record;
 import cn.ipanel.questionnaireserver.service.IQuestionnaireService;
-import cn.ipanel.questionnaireserver.util.Constant;
+import cn.ipanel.questionnaireserver.constant.QuestionConstant;
 import cn.ipanel.questionnaireserver.util.IdWorker;
+import cn.ipanel.questionnaireserver.vo.QuestionBody;
+import cn.ipanel.questionnaireserver.vo.QuestionStatistics;
 import cn.ipanel.questionnaireserver.vo.R;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
@@ -84,7 +89,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         if (questionnaireList.isEmpty()) {
             return R.error("未查询到相关问卷");
         }
-        int update = questionnaireMapper.update(questionnaireList.get(0), new UpdateWrapper<Questionnaire>().lambda().set(Questionnaire::getStatus, Constant.QUESTIONNAIRE_STATUS_RELEASE));
+        int update = questionnaireMapper.update(questionnaireList.get(0), new UpdateWrapper<Questionnaire>().lambda().set(Questionnaire::getStatus, QuestionnaireConstant.QUESTIONNAIRE_STATUS_RELEASE));
         if (update != 1) {
             throw new CheckedException("更新失败");
         }
@@ -178,9 +183,54 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
         //统计数据，选择题统计各项票数，非选择题统计有效数
         List<QuestionnaireToQuestion> questionnaireToQuestionList = questionnaireToQuestionMapper.selectAllByQuestionnaireId(questionnaireId);
+        questionnaireToQuestionList.forEach(questionnaireToQuestion -> {
 
+            Question question = questionMapper.selectById(questionnaireToQuestion.getId());
+            //提交的答案存在且不为空
+            if (answers.get(question.getId()) != null && StringUtils.isNotBlank(answers.get(question.getId()))) {
+                //没有记录时
+                if (StringUtils.isBlank(questionnaireToQuestion.getStatistics())) {
 
+                    if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
+                            || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
+                        List<QuestionStatistics> questionStatisticsList = JSON.parseArray(question.getBody(), QuestionBody.class)
+                                .stream()
+                                .map(questionBody -> new QuestionStatistics()
+                                        .setNum(0)
+                                        .setCode(questionBody.getCode())
+                                        .setContent(questionBody.content)
+                                        .setDesc(questionBody.getDesc())
+                                        .setPic(questionBody.getPic()))
+                                .collect(Collectors.toList());
+                        questionnaireToQuestion.setStatistics(JSON.toJSONString(questionStatisticsList));
+                    } else {
+                        questionnaireToQuestion.setStatistics(String.valueOf(0));
+                    }
+                }
 
+                //选择题
+                if (question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_SINGLE_CHOICE)
+                        || question.getQuestionType().equals(QuestionConstant.QUESTION_TYPE_MULTIPLE_CHOICE)) {
+
+                    List<QuestionStatistics> statisticsList = JSON.parseArray(questionnaireToQuestion.getStatistics(), QuestionStatistics.class);
+                    statisticsList.forEach(statistics -> {
+                        String[] split = answers.get(question.getId()).trim().split("|");
+                        for (String s : split) {
+                            if (statistics.getCode().equals(s)) {
+                                statistics.setNum(statistics.getNum() + 1);
+                            }
+                        }
+                    });
+
+                } else {
+                    //为其他类型题目是暂时考虑有效作答数，只储存数量
+                    int num = Integer.parseInt(questionnaireToQuestion.getStatistics());
+                    questionnaireToQuestion.setStatistics(String.valueOf(num + 1));
+                }
+                //将数据更新到数据库
+                int updateById = questionnaireToQuestionMapper.updateById(questionnaireToQuestion);
+            }
+        });
         return R.ok();
     }
 
@@ -200,7 +250,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                 .setId(id)
                 .setTitle(title)
                 .setDescription(description)
-                .setStatus(Constant.QUESTIONNAIRE_STATUS_UN_RELEASE)
+                .setStatus(QuestionnaireConstant.QUESTIONNAIRE_STATUS_UN_RELEASE)
                 .setCreateTime(LocalDateTime.now())
                 .setStartTime(LocalDateTime.parse(startTime, formatter))
                 .setEndTime(LocalDateTime.parse(endTime, formatter));

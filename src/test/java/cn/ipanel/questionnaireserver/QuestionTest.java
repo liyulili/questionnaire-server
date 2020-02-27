@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -44,6 +45,16 @@ public class QuestionTest {
         List<QuestionBody> questionBodies = JSON.parseArray(JsonStr, QuestionBody.class);
         questionBodies.forEach(q->System.out.println(q.toString()));
 
+    }
+
+    @Test
+    public void test(){
+        HashMap<Long, String> map = new HashMap<>();
+        map.put(1L,"A");
+        map.put(2L,"B");
+        map.put(3L,"C");
+        map.put(4L,"D");
+        System.out.println("map.get(5L) = " + map.get(5L));
     }
 
 }
