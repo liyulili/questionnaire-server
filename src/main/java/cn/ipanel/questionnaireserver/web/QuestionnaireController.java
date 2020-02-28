@@ -11,12 +11,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@Validated
 @Slf4j
 @Controller
 @RequestMapping("/questionnaire")
@@ -30,7 +34,10 @@ public class QuestionnaireController {
 
 
     @RequestMapping("/addQuestionnaire")
-    public R addQuestionnaire(String title, String description, String startTime, String endTime) {
+    public R addQuestionnaire(@RequestParam @NotEmpty(message = "标题不能为空") String title,
+                              String description,
+                              String startTime,
+                              String endTime) {
 
         log.info("addQuestionnaire params: title={},description={},startTime={},endTime={}", title, description, startTime, endTime);
         return questionnaireService.addQuestionnaire(title, description, startTime, endTime);

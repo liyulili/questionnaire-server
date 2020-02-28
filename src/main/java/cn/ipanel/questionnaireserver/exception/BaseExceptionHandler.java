@@ -4,10 +4,13 @@ package cn.ipanel.questionnaireserver.exception;
 import cn.ipanel.questionnaireserver.vo.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import javax.validation.ConstraintViolationException;
+import javax.xml.bind.ValidationException;
 import java.sql.SQLException;
 
 /**
@@ -49,6 +52,33 @@ public class BaseExceptionHandler {
     public R handleSQLException(SQLException e) {
         log.error(e.getMessage(), e);
         return R.error();
+    }
+
+    /**
+     * 方法参数校验
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public R handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        log.error(e.getMessage(), e);
+        return R.error(403, e.getBindingResult().getFieldError().getDefaultMessage());
+    }
+
+    /**
+     * ValidationException
+     */
+    @ExceptionHandler(ValidationException.class)
+    public R handleValidationException(ValidationException e) {
+        log.error(e.getMessage(), e);
+        return R.error(403, e.getCause().getMessage());
+    }
+
+    /**
+     * ConstraintViolationException
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public R handleConstraintViolationException(ConstraintViolationException e) {
+        log.error(e.getMessage(), e);
+        return R.error(403, e.getMessage());
     }
 
 }
