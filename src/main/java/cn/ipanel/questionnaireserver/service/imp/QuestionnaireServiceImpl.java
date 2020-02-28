@@ -121,7 +121,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     }
 
     @Override
-    public R queryQuestionnaire(String startTime, String endTime, Integer status, Integer sortType) {
+    public R queryQuestionnaireList(String startTime, String endTime, Integer status, Integer sortType) {
 
         List<Questionnaire> questionnaireList = questionnaireMapper.selectList(
                 new QueryWrapper<Questionnaire>()
@@ -136,7 +136,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     }
 
     @Override
-    public R queryQuestion(Long questionnaireId) {
+    public R queryQuestionListByquestionnaireId(Long questionnaireId) {
 
         List<Question> questionList = questionMapper.selectList(new QueryWrapper<Question>().lambda()
                 .inSql(Question::getId, "select question_id from questionnaire_to_question where questionnaire_id =" + questionnaireId));

@@ -57,7 +57,7 @@ public interface IQuestionnaireService {
      * @param sortType  排序类型
      * @return R
      */
-    R queryQuestionnaire(String startTime, String endTime, Integer status, Integer sortType);
+    R queryQuestionnaireList(String startTime, String endTime, Integer status, Integer sortType);
 
     /**
      * 查询问卷试题
@@ -65,7 +65,7 @@ public interface IQuestionnaireService {
      * @param questionnaireId 问卷id
      * @return R
      */
-    R queryQuestion(Long questionnaireId);
+    R queryQuestionListByquestionnaireId(Long questionnaireId);
 
     /**
      * 添加问题到问卷
