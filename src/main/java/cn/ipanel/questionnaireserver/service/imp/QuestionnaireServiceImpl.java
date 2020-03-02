@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 /**
  * @author lenovo
  */
+@Slf4j
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
@@ -56,7 +58,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:mm:ss");
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public R addQuestionnaire(String title, String description, LocalDateTime startTime, LocalDateTime endTime) {
 
@@ -64,6 +66,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", id);
+
         return R.ok(jsonObject);
     }
 
@@ -77,7 +80,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         //解析Question
         questionList.forEach(question -> {
             int insert = questionMapper.insert(question);
-            QuestionnaireToQuestion questionnaireToQuestion = new QuestionnaireToQuestion().setQuestionnaireId(id).setQuestionId((long) insert);
+            QuestionnaireToQuestion questionnaireToQuestion = new QuestionnaireToQuestion().setQuestionnaireId(id).setQuestionId(question.getId());
             int insert1 = questionnaireToQuestionMapper.insert(questionnaireToQuestion);
             if (insert != 1) {
                 throw new CheckedException("插入数据库失败");
@@ -86,18 +89,13 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         return R.ok();
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public R releaseQuestionnaire(Long questionnaireId) {
-        List<Questionnaire> questionnaireList = questionnaireMapper.selectList(new QueryWrapper<Questionnaire>().lambda().eq(Questionnaire::getId, questionnaireId));
-        if (questionnaireList.isEmpty()) {
-            return R.error("未查询到相关问卷");
-        }
-        int update = questionnaireMapper.update(questionnaireList.get(0), new UpdateWrapper<Questionnaire>().lambda().set(Questionnaire::getStatus, QuestionnaireConstant.QUESTIONNAIRE_STATUS_RELEASE));
-        if (update != 1) {
-            throw new CheckedException("更新失败");
-        }
-
+        int update = questionnaireMapper.update(null, new UpdateWrapper<Questionnaire>().lambda()
+                .eq(Questionnaire::getId,questionnaireId)
+                .set(Questionnaire::getStatus, QuestionnaireConstant.QUESTIONNAIRE_STATUS_RELEASE));
+        log.info("releaseQuestionnaire questionnaireId={}，update={}",questionnaireId,update);
         return R.ok();
     }
 
@@ -139,7 +137,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     }
 
     @Override
-    public R queryQuestionListByquestionnaireId(Long questionnaireId) {
+    public R queryQuestionListByQuestionnaireId(Long questionnaireId) {
 
         List<Question> questionList = questionMapper.selectList(new QueryWrapper<Question>().lambda()
                 .inSql(Question::getId, "select question_id from questionnaire_to_question where questionnaire_id =" + questionnaireId));
@@ -275,7 +273,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                     .map(questionBody -> new QuestionStatistics()
                             .setNum(0)
                             .setCode(questionBody.getCode())
-                            .setContent(questionBody.content)
+                            .setContent(questionBody.getContent())
                             .setDesc(questionBody.getDesc())
                             .setPic(questionBody.getPic()))
                     .collect(Collectors.toList());
@@ -296,7 +294,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
      */
     private long addQuestionnaireToDataBase(String title, String description, LocalDateTime startTime, LocalDateTime endTime) {
         long id = idWorker.nextId();
-
+        System.out.println("id = " + id);
         Questionnaire questionnaire = new Questionnaire()
                 .setId(id)
                 .setTitle(title)

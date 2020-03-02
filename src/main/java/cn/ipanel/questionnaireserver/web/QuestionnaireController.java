@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Validated
 @Slf4j
-@Controller
+@RestController
 @RequestMapping("/questionnaire")
 public class QuestionnaireController {
 
@@ -85,7 +85,7 @@ public class QuestionnaireController {
     @GetMapping("/queryQuestionList")
     public R queryQuestionList(@RequestParam @NotNull(message = "问卷id不能为空") Long questionnaireId) {
         log.info("queryQuestionList params: questionnaireId={}", questionnaireId);
-        return questionnaireService.queryQuestionListByquestionnaireId(questionnaireId);
+        return questionnaireService.queryQuestionListByQuestionnaireId(questionnaireId);
     }
 
     @PostMapping("/addQuestionToQuestionnaire")

@@ -12,6 +12,9 @@ import java.io.Serializable;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * @author lenovo
+ */
 @ApiModel(value = "cn.ipanel.questionnaireserver.pojo.QuestionnaireToQuestion")
 @Data
 @TableName(value = "questionnaire_to_question")

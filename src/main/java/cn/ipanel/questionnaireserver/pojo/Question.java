@@ -70,7 +70,7 @@ public class Question implements Serializable {
     @TableField(value = "question_bank")
     @ApiModelProperty(value = "是否作为题库，1：不作为，2放入题库")
     @NotNull(message = "questionBank不能为空")
-    @Range(min = 0, max = 1, message = "参数错误")
+    @Range(min = 1, max = 2, message = "参数错误")
     private Integer questionBank;
 
     private static final long serialVersionUID = 1L;

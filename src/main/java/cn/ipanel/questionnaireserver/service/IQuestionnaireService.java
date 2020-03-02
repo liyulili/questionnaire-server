@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author lenovo
+ */
 public interface IQuestionnaireService {
 
 
@@ -66,7 +69,7 @@ public interface IQuestionnaireService {
      * @param questionnaireId 问卷id
      * @return R
      */
-    R queryQuestionListByquestionnaireId(Long questionnaireId);
+    R queryQuestionListByQuestionnaireId(Long questionnaireId);
 
     /**
      * 添加问题到问卷
