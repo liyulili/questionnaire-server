@@ -13,6 +13,9 @@ import java.util.Date;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * @author lenovo
+ */
 @ApiModel(value="cn.ipanel.questionnaireserver.pojo.Questionnaire")
 @Data
 @Accessors(chain = true)
@@ -46,15 +49,15 @@ public class Questionnaire implements Serializable {
     @ApiModelProperty(value="问卷状态{1:已创建未发布 2：已发布}")
     private Integer status;
 
-    @TableField(value = "createTime")
+    @TableField(value = "create_time")
     @ApiModelProperty(value="null")
     private LocalDateTime createTime;
 
-    @TableField(value = "startTime")
+    @TableField(value = "start_time")
     @ApiModelProperty(value="null")
     private LocalDateTime startTime;
 
-    @TableField(value = "endTime")
+    @TableField(value = "end_time")
     @ApiModelProperty(value="null")
     private LocalDateTime endTime;
 
@@ -66,10 +69,10 @@ public class Questionnaire implements Serializable {
 
     public static final String COL_STATUS = "status";
 
-    public static final String COL_CREATETIME = "createTime";
+    public static final String COL_CREATETIME = "create_time";
 
-    public static final String COL_STARTTIME = "startTime";
+    public static final String COL_STARTTIME = "start_time";
 
-    public static final String COL_ENDTIME = "endTime";
+    public static final String COL_ENDTIME = "end_time";
 
 }

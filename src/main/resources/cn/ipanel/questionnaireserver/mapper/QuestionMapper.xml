@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.ipanel.questionnaireserver.mapper.QuestionMapper">
-  <resultMap id="BaseResultMap" type="cn.ipanel.questionnaireserver.pojo.Question">
-    <!--@mbg.generated-->
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="question_type" jdbcType="INTEGER" property="questionType" />
-    <result column="required" jdbcType="INTEGER" property="required" />
-    <result column="title" jdbcType="LONGVARCHAR" property="title" />
-    <result column="body" jdbcType="LONGVARCHAR" property="body" />
-    <result column="question_bank" jdbcType="INTEGER" property="questionBank" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    <!--@mbg.generated-->
-    id, question_type, required, title, body, question_bank
-  </sql>
+    <resultMap id="BaseResultMap" type="cn.ipanel.questionnaireserver.pojo.Question">
+        <!--@mbg.generated-->
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="question_type" jdbcType="INTEGER" property="questionType"/>
+        <result column="required" jdbcType="INTEGER" property="required"/>
+        <result column="title" jdbcType="LONGVARCHAR" property="title"/>
+        <result column="body" jdbcType="LONGVARCHAR" property="body"/>
+        <result column="question_bank" jdbcType="INTEGER" property="questionBank"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, question_type, required, title, body, question_bank
+    </sql>
+
+    <!--删除id在集合中且QuestionBank符合条件的题目 on 2020-03-02-->
+    <delete id="deleteByIdInAndQuestionBank">
+        delete from question
+        where id in
+        <foreach item="item" index="index" collection="idCollection"
+                 open="(" separator="," close=")">
+            #{item,jdbcType=INTEGER}
+        </foreach>
+        <if test="questionBank != null">
+            and question_bank=#{questionBank,jdbcType=INTEGER}
+        </if>
+    </delete>
 </mapper>

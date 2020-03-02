@@ -24,11 +24,11 @@ public class QuestionnaireToQuestion implements Serializable {
     @ApiModelProperty(value = "null")
     private Long id;
 
-    @TableField(value = "questionnaireId")
+    @TableField(value = "questionnaire_id")
     @ApiModelProperty(value = "null")
     private Long questionnaireId;
 
-    @TableField(value = "questionId")
+    @TableField(value = "question_id")
     @ApiModelProperty(value = "null")
     private Long questionId;
 
@@ -36,17 +36,17 @@ public class QuestionnaireToQuestion implements Serializable {
     @ApiModelProperty(value = "null")
     private String statistics;
 
-    @TableField(value = "order")
+    @TableField(value = "od")
     @ApiModelProperty(value = "null")
-    private Integer order;
+    private Integer od;
 
     private static final long serialVersionUID = 1L;
 
-    public static final String COL_QUESTIONNAIREID = "questionnaireId";
+    public static final String COL_QUESTIONNAIREID = "questionnaire_id";
 
-    public static final String COL_QUESTIONID = "questionId";
+    public static final String COL_QUESTIONID = "question_id";
 
     public static final String COL_STATISTICS = "statistics";
 
-    public static final String COL_ORDER = "order";
+    public static final String COL_OD = "od";
 }

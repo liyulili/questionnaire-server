@@ -93,9 +93,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     @Override
     public R releaseQuestionnaire(Long questionnaireId) {
         int update = questionnaireMapper.update(null, new UpdateWrapper<Questionnaire>().lambda()
-                .eq(Questionnaire::getId,questionnaireId)
+                .eq(Questionnaire::getId, questionnaireId)
                 .set(Questionnaire::getStatus, QuestionnaireConstant.QUESTIONNAIRE_STATUS_RELEASE));
-        log.info("releaseQuestionnaire questionnaireId={}，update={}",questionnaireId,update);
+        log.info("releaseQuestionnaire questionnaireId={}，update={}", questionnaireId, update);
         return R.ok();
     }
 
@@ -105,19 +105,23 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
         //1.先删除问卷
         int deleteQuestionnaire = questionnaireMapper.deleteById(questionnaireId);
-
+        log.info("deleteQuestionnaire={}", deleteQuestionnaire);
         //2,3可以考虑异步编程
 
         //2.删除问题和统计
-        HashMap<String, Object> map = Maps.newHashMapWithExpectedSize(1);
-        map.put(QuestionnaireToQuestion.COL_QUESTIONNAIREID, questionnaireId);
-        int deleteByMap = questionnaireToQuestionMapper.deleteByMap(map);
-        //TODO 删除非题库标记的问题
+        List<Long> questionIdList = questionnaireToQuestionMapper.queryQuestionIdByQuestionnaireId(questionnaireId);
+        int deleteQuestionnaireToQuestionByQuestionnaireId = questionnaireToQuestionMapper.deleteByQuestionnaireId(questionnaireId);
+        log.info("deleteQuestionnaireToQuestionByQuestionnaireId={}", deleteQuestionnaireToQuestionByQuestionnaireId);
+
+        if (!questionIdList.isEmpty()) {
+            int deleteByIdInAndQuestionBank = questionMapper.deleteByIdInAndQuestionBank(questionIdList, QuestionConstant.QUESTION_WITHOUT_BANK);
+            log.info("deleteByIdInAndQuestionBank={}", deleteByIdInAndQuestionBank);
+        }
 
         //3.删除答题记录
-        map.clear();
-        map.put(Record.COL_QUESTIONNAIRE_ID, questionnaireId);
-        int i1 = recordMapper.deleteByMap(map);
+        int deleteRecordByQuestionnaireId = recordMapper.deleteByQuestionnaireId(questionnaireId);
+        log.info("deleteRecordByQuestionnaireId={}", deleteRecordByQuestionnaireId);
+
         return R.ok();
     }
 
@@ -130,8 +134,8 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                         .eq(status != null, Questionnaire::getStatus, status)
                         .ge(startTime != null, Questionnaire::getStartTime, startTime)
                         .le(endTime != null, Questionnaire::getEndTime, endTime)
-                        .orderByAsc(sortType == 1, Questionnaire::getCreateTime)
-                        .orderByDesc(sortType == 2, Questionnaire::getCreateTime));
+                        .orderByAsc(sortType != null && sortType.equals(1), Questionnaire::getCreateTime)
+                        .orderByDesc(sortType != null && sortType.equals(2), Questionnaire::getCreateTime));
 
         return R.ok(questionnaireList);
     }
@@ -153,7 +157,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         QuestionnaireToQuestion questionnaireToQuestion = new QuestionnaireToQuestion()
                 .setQuestionId(question.getId())
                 .setQuestionnaireId(questionnaireId)
-                .setOrder(order);
+                .setOd(order);
         questionnaireToQuestionMapper.insert(questionnaireToQuestion);
         return R.ok();
     }
@@ -188,8 +192,9 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         List<QuestionnaireToQuestion> questionnaireToQuestionList = questionnaireToQuestionMapper.selectAllByQuestionnaireId(questionnaireId);
         questionnaireToQuestionList.forEach(questionnaireToQuestion -> {
 
-            Question question = questionMapper.selectById(questionnaireToQuestion.getId());
+            Question question = questionMapper.selectById(questionnaireToQuestion.getQuestionId());
             //提交的答案存在且不为空
+
             if (answers.get(question.getId()) != null && StringUtils.isNotBlank(answers.get(question.getId()))) {
                 //没有记录时
                 if (StringUtils.isBlank(questionnaireToQuestion.getStatistics())) {
@@ -251,6 +256,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                     }
                 }
             });
+            questionnaireToQuestion.setStatistics(JSON.toJSONString(statisticsList));
 
         } else {
             //为其他类型题目是暂时考虑有效作答数，只储存数量

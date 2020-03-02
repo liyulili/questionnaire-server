@@ -10,6 +10,9 @@ import java.io.Serializable;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * @author lenovo
+ */
 @ApiModel(value="cn.ipanel.questionnaireserver.pojo.Record")
 @Data
 @TableName(value = "record")

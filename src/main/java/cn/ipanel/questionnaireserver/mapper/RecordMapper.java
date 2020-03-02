@@ -7,6 +7,9 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+/**
+ * @author lenovo
+ */
 @Mapper
 public interface RecordMapper extends BaseMapper<Record> {
 
@@ -17,4 +20,13 @@ public interface RecordMapper extends BaseMapper<Record> {
      * @return
      */
     int insertList(@Param("list") List<Record> list);
+
+    /**
+     * 根据问卷id删除记录
+     * @param questionnaireId 问卷id
+     * @return
+     */
+    int deleteByQuestionnaireId(@Param("questionnaireId")Long questionnaireId);
+
+
 }

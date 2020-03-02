@@ -4,6 +4,7 @@ package cn.ipanel.questionnaireserver.exception;
 import cn.ipanel.questionnaireserver.vo.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -87,6 +88,17 @@ public class BaseExceptionHandler {
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public R handleConstraintViolationException(MissingServletRequestParameterException e) {
+        log.error(e.getMessage(), e);
+        return R.error(403, e.getMessage());
+    }
+
+    /**
+     * BindException
+     * @param e
+     * @return
+     */
+    @ExceptionHandler(BindException.class)
+    public R handleConstraintViolationException(BindException e) {
         log.error(e.getMessage(), e);
         return R.error(403, e.getMessage());
     }

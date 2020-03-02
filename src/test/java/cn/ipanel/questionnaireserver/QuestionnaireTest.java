@@ -1,6 +1,8 @@
 package cn.ipanel.questionnaireserver;
 
 import cn.ipanel.questionnaireserver.mapper.QuestionMapper;
+import cn.ipanel.questionnaireserver.mapper.QuestionnaireMapper;
+import cn.ipanel.questionnaireserver.mapper.QuestionnaireToQuestionMapper;
 import cn.ipanel.questionnaireserver.pojo.Question;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +16,12 @@ public class QuestionnaireTest {
 
     @Autowired
     QuestionMapper questionMapper;
+
+    @Autowired
+    QuestionnaireMapper questionnaireMapper;
+
+    @Autowired
+    QuestionnaireToQuestionMapper questionnaireToQuestionMapper;
 
     /**
      * 测试插入操作后主键是否回填
@@ -30,6 +38,15 @@ public class QuestionnaireTest {
         int insert = questionMapper.insert(question);
         System.out.println("insert = " + insert);
         System.out.println("id=" + question.getId());
+    }
+
+    /**
+     * 测试删除问卷
+     */
+    @Test
+    public void deleteQuestionnaire() {
+        int i = questionnaireToQuestionMapper.deleteByQuestionnaireId(null);
+        System.out.println("i = " + i);
     }
 
 }

@@ -7,12 +7,12 @@
     <result column="title" jdbcType="VARCHAR" property="title" />
     <result column="description" jdbcType="LONGVARCHAR" property="description" />
     <result column="status" jdbcType="INTEGER" property="status" />
-    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="startTime" jdbcType="TIMESTAMP" property="startTime" />
-    <result column="endTime" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
   </resultMap>
   <sql id="Base_Column_List">
     <!--@mbg.generated-->
-    id, title, description, `status`, createTime, startTime, endTime
+    id, title, description, `status`, create_time, start_time, end_time
   </sql>
 </mapper>

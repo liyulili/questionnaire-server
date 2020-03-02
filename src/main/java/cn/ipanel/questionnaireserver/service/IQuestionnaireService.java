@@ -58,7 +58,7 @@ public interface IQuestionnaireService {
      * @param startTime 开始时间
      * @param endTime   结束时间
      * @param status    状态 1:已创建未发布 2：已发布,null：查询所有状态
-     * @param sortType  排序类型
+     * @param sortType  排序类型 1:按创建时间顺序 2：按创建时间逆序
      * @return R
      */
     R queryQuestionnaireList(LocalDateTime startTime, LocalDateTime endTime, Integer status, Integer sortType);

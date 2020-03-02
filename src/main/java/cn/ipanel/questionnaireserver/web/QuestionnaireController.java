@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -74,10 +75,10 @@ public class QuestionnaireController {
     }
 
     @GetMapping("/queryQuestionnaire")
-    public R queryQuestionnaire(@RequestParam(required = false) @Future LocalDateTime startTime,
-                                @RequestParam(required = false) @Future LocalDateTime endTime,
+    public R queryQuestionnaire(@RequestParam(required = false) LocalDateTime startTime,
+                                @RequestParam(required = false) LocalDateTime endTime,
                                 @RequestParam(required = false) Integer status,
-                                @RequestParam(required = false, value = "1") Integer sortType) {
+                                @RequestParam(required = false) Integer sortType) {
         log.info("queryQuestionnaireList params: startTime={},endTime={},status={},sortType={}", startTime, endTime, status, sortType);
         return questionnaireService.queryQuestionnaireList(startTime, endTime, status, sortType);
     }
@@ -89,7 +90,7 @@ public class QuestionnaireController {
     }
 
     @PostMapping("/addQuestionToQuestionnaire")
-    public R addQuestionToQuestionnaire(@RequestParam @Validated Question question,
+    public R addQuestionToQuestionnaire( @Validated Question question,
                                         @RequestParam @NotNull(message = "问卷id不能为空") Long questionnaireId,
                                         @RequestParam(required = false) Integer order) {
         log.info("addQuestionToQuestionnaire params: question={},questionnaireId={},order={}", question.toString(), questionnaireId, order);
