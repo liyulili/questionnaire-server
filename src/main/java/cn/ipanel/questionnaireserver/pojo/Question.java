@@ -16,6 +16,9 @@ import org.hibernate.validator.constraints.Range;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+/**
+ * @author lenovo
+ */
 @ApiModel(value = "cn.ipanel.questionnaireserver.pojo.Question")
 @Data
 @TableName(value = "question")

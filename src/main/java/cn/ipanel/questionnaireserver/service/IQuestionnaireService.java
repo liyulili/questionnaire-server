@@ -3,6 +3,7 @@ package cn.ipanel.questionnaireserver.service;
 import cn.ipanel.questionnaireserver.pojo.Question;
 import cn.ipanel.questionnaireserver.vo.R;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public interface IQuestionnaireService {
      * @param endTime     结束时间
      * @return R
      */
-    R addQuestionnaire(String title, String description, String startTime, String endTime);
+    R addQuestionnaire(String title, String description, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 新建问卷（包括题目）
@@ -30,7 +31,7 @@ public interface IQuestionnaireService {
      * @param endTime      结束时间
      * @return R
      */
-    R addQuestionnaire(String title, String description, List<Question> questionList, String startTime, String endTime);
+    R addQuestionnaire(String title, String description, List<Question> questionList, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 发布问卷
@@ -57,7 +58,7 @@ public interface IQuestionnaireService {
      * @param sortType  排序类型
      * @return R
      */
-    R queryQuestionnaireList(String startTime, String endTime, Integer status, Integer sortType);
+    R queryQuestionnaireList(LocalDateTime startTime, LocalDateTime endTime, Integer status, Integer sortType);
 
     /**
      * 查询问卷试题

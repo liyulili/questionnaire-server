@@ -32,6 +32,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @author lenovo
+ */
 @Service
 public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
@@ -55,7 +58,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
     @Transactional
     @Override
-    public R addQuestionnaire(String title, String description, String startTime, String endTime) {
+    public R addQuestionnaire(String title, String description, LocalDateTime startTime, LocalDateTime endTime) {
 
         long id = addQuestionnaireToDataBase(title, description, startTime, endTime);
 
@@ -66,7 +69,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
 
     @Transactional
     @Override
-    public R addQuestionnaire(String title, String description, List<Question> questionList, String startTime, String endTime) {
+    public R addQuestionnaire(String title, String description, List<Question> questionList, LocalDateTime startTime, LocalDateTime endTime) {
 
         //添加问卷到数据库返回问卷id
         long id = addQuestionnaireToDataBase(title, description, startTime, endTime);
@@ -121,14 +124,14 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
     }
 
     @Override
-    public R queryQuestionnaireList(String startTime, String endTime, Integer status, Integer sortType) {
+    public R queryQuestionnaireList(LocalDateTime startTime, LocalDateTime endTime, Integer status, Integer sortType) {
 
         List<Questionnaire> questionnaireList = questionnaireMapper.selectList(
                 new QueryWrapper<Questionnaire>()
                         .lambda()
                         .eq(status != null, Questionnaire::getStatus, status)
-                        .ge(StringUtils.isNotBlank(startTime), Questionnaire::getStartTime, LocalDateTime.parse(startTime, formatter))
-                        .le(StringUtils.isNotBlank(endTime), Questionnaire::getEndTime, LocalDateTime.parse(endTime, formatter))
+                        .ge(startTime != null, Questionnaire::getStartTime, startTime)
+                        .le(endTime != null, Questionnaire::getEndTime, endTime)
                         .orderByAsc(sortType == 1, Questionnaire::getCreateTime)
                         .orderByDesc(sortType == 2, Questionnaire::getCreateTime));
 
@@ -211,7 +214,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
         Questionnaire questionnaire = questionnaireMapper.selectById(questionnaireId);
 
         List<QuestionnaireToQuestion> questionnaireToQuestionList = questionnaireToQuestionMapper.selectAllByQuestionnaireId(questionnaireId);
-        HashMap<Long, String> map = new HashMap<>();
+        HashMap<Long, String> map = Maps.newHashMapWithExpectedSize(questionnaireToQuestionList.size());
         questionnaireToQuestionList.forEach(questionnaireToQuestion -> map.put(questionnaireToQuestion.getQuestionId(), questionnaireToQuestion.getStatistics()));
 
         List<Long> questionIdList = questionnaireToQuestionList.stream().map(QuestionnaireToQuestion::getQuestionId).collect(Collectors.toList());
@@ -291,7 +294,7 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
      * @param endTime     结束时间
      * @return 问卷id
      */
-    private long addQuestionnaireToDataBase(String title, String description, String startTime, String endTime) {
+    private long addQuestionnaireToDataBase(String title, String description, LocalDateTime startTime, LocalDateTime endTime) {
         long id = idWorker.nextId();
 
         Questionnaire questionnaire = new Questionnaire()
@@ -300,8 +303,8 @@ public class QuestionnaireServiceImpl implements IQuestionnaireService {
                 .setDescription(description)
                 .setStatus(QuestionnaireConstant.QUESTIONNAIRE_STATUS_UN_RELEASE)
                 .setCreateTime(LocalDateTime.now())
-                .setStartTime(LocalDateTime.parse(startTime, formatter))
-                .setEndTime(LocalDateTime.parse(endTime, formatter));
+                .setStartTime(startTime)
+                .setEndTime(endTime);
         int insert = questionnaireMapper.insert(questionnaire);
 
         if (insert != 1) {
