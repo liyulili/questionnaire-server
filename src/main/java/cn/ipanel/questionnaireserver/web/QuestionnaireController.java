@@ -90,7 +90,7 @@ public class QuestionnaireController {
     }
 
     @PostMapping("/addQuestionToQuestionnaire")
-    public R addQuestionToQuestionnaire( @Validated Question question,
+    public R addQuestionToQuestionnaire(@Validated Question question,
                                         @RequestParam @NotNull(message = "问卷id不能为空") Long questionnaireId,
                                         @RequestParam(required = false) Integer order) {
         log.info("addQuestionToQuestionnaire params: question={},questionnaireId={},order={}", question.toString(), questionnaireId, order);

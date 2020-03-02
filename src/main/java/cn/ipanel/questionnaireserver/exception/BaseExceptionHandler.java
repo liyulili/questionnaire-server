@@ -9,7 +9,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.ConstraintViolationException;
 import javax.xml.bind.ValidationException;
@@ -84,7 +86,7 @@ public class BaseExceptionHandler {
     }
 
     /**
-     *参数绑定异常
+     * 参数绑定异常
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public R handleConstraintViolationException(MissingServletRequestParameterException e) {
@@ -94,6 +96,7 @@ public class BaseExceptionHandler {
 
     /**
      * BindException
+     *
      * @param e
      * @return
      */
@@ -101,6 +104,20 @@ public class BaseExceptionHandler {
     public R handleConstraintViolationException(BindException e) {
         log.error(e.getMessage(), e);
         return R.error(403, e.getMessage());
+    }
+
+    /**
+     * https://jira.spring.io/browse/SPR-14651
+     * 4.3.5 supports RedirectAttributes redirectAttributes
+     *
+     * @param e
+     * @param redirectAttributes
+     * @return
+     */
+    @ExceptionHandler(MultipartException.class)
+    public String handleError1(MultipartException e, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("message", e.getCause().getMessage());
+        return "redirect:/uploadStatus";
     }
 
 }
