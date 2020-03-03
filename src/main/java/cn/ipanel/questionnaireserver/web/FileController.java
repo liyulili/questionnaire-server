@@ -1,16 +1,16 @@
 package cn.ipanel.questionnaireserver.web;
 
+import cn.ipanel.questionnaireserver.config.FtpConfig;
+import cn.ipanel.questionnaireserver.util.FtpUtil;
 import cn.ipanel.questionnaireserver.vo.R;
-import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
@@ -22,38 +22,44 @@ import java.util.UUID;
 @RestController
 public class FileController {
 
-    /**
-     * Save the uploaded file to this folder
-     */
-    private static String UPLOADED_FOLDER = "E://temp//";
+
+    private static String remotePath = "/questionnaire/upload/";
+    private static String address = "http://192.168.37.50:8070/partybuilding/";
+
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:mm:ss");
 
+    @Autowired
+    FtpConfig ftpConfig;
 
     @PostMapping("/upload")
-    public R singleFileUpload(HttpServletRequest req, MultipartFile file) {
-        StringBuffer url = new StringBuffer();
-        String filePath = "/questionnaire/" + LocalDateTime.now().format(formatter);
-        String imgFolderPath = req.getServletContext().getRealPath(filePath);
-        File imgFolder = new File(imgFolderPath);
-        if (!imgFolder.exists()) {
-            imgFolder.mkdirs();
+    public R singleFileUpload(MultipartFile multipartFile) throws IOException {
+
+        //指定暂时存放文件的目录
+        String tempFileDir = FtpUtil.class.getResource("/").getPath()+"uploadTemp";
+        System.out.println("tempFileDir = " + tempFileDir);
+        File dir = new File(tempFileDir);
+        //判断目录是否存在，不存在则创建目录
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
-        url.append(req.getScheme())
-                .append("://")
-                .append(req.getServerName())
-                .append(":")
-                .append(req.getServerPort())
-                .append(req.getContextPath())
-                .append(filePath);
-        String imgName = UUID.randomUUID() + "_" + file.getOriginalFilename().replaceAll(" ", "");
-        try {
-            IOUtils.write(file.getBytes(), new FileOutputStream(new File(imgFolder, imgName)));
-            url.append("/").append(imgName);
-            return R.ok(url.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return R.error("上传失败!");
+
+        //生成新文件名，防止文件名重复而导致文件覆盖
+        //1、获取原文件后缀名 .img .jpg ....
+        String originalFilename = multipartFile.getOriginalFilename();
+        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        //2、使用UUID生成新文件名
+        String newFileName = UUID.randomUUID() + suffix;
+        //3、生成文件 C:\ftpfile\img\sdasdasd.jpg
+        File file = new File(dir, newFileName);
+        //4、传输内容
+        multipartFile.transferTo(file);
+        //5、上传至ftp服务器
+        boolean b = FtpUtil.ftpUpload(newFileName, ftpConfig.getUrl(), ftpConfig.getPort(), ftpConfig.getUsername(), ftpConfig.getPassword(), file.getPath(), remotePath);
+        System.out.println("b = " + b);
+        //6、删除本地文件
+        boolean delete = file.delete();
+        System.out.println("delete = " + delete);
+        return R.ok(address.substring(0, address.length() - 1) + remotePath + newFileName);
     }
 
 

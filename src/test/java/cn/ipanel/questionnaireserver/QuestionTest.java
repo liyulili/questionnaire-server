@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -49,12 +50,15 @@ public class QuestionTest {
 
     @Test
     public void test(){
-        HashMap<Long, String> map = new HashMap<>();
-        map.put(1L,"A");
-        map.put(2L,"B");
-        map.put(3L,"C");
-        map.put(4L,"D");
-        System.out.println("map.get(5L) = " + map.get(5L));
+//        HashMap<Long, String> map = new HashMap<>();
+//        map.put(1L,"A");
+//        map.put(2L,"B");
+//        map.put(3L,"C");
+//        map.put(4L,"D");
+//        System.out.println("map.get(5L) = " + map.get(5L));
+
+        System.out.println("File.separator = " + File.separator);
+        System.out.println("File.pathSeparator = " + File.pathSeparator);
     }
 
 }

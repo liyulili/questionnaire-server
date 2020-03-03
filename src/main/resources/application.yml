@@ -4,7 +4,7 @@ server:
 spring:
   application:
     name: questionnaire-server
-
+#数据库配置
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/questionnaire?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=GMT%2B8
     username: root
@@ -17,21 +17,25 @@ spring:
     minEvictableIdleTimeMillis: 300000
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  #文件上传配置
+#文件上传配置
   servlet:
     multipart:
-      max-file-size:mybatis: 10MB
+      max-file-size: 10MB
       max-request-size: 10MB
+
+#mybatis
 mybatis:
   type-aliases-package: cn.ipanel.questionnaireserver.pojo
   configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
 
+#mybatis-plus
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+#日志
 logging:
   config: classpath:logback-spring.xml
   path: /logs
@@ -43,6 +47,17 @@ logging:
           parameters:
             AbstractSerializableParameter: error
 
+#idWorker
 idworker:
   workerId: 1
   dataCenterId: 1
+
+#ftp配置
+ftp:
+  url: 192.168.37.50
+  port: 21
+  username: ipanel
+  password: www.iPanel.cn
+  remotePath: # ftp服务器存放文件的路径
+  localDir: #本地需要上传的文件的路径
+  downDir: #下载文件时，存放在本地的路径
