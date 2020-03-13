@@ -6,9 +6,9 @@ spring:
     name: questionnaire-server
 #数据库配置
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/questionnaire?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.35.187:3306/questionnaire?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=GMT%2B8
     username: root
-    password: 123456
+    password: ipanel
     initialSize: 5
     minIdle: 5
     maxActive: 20
@@ -38,7 +38,7 @@ mybatis-plus:
 #日志
 logging:
   config: classpath:logback-spring.xml
-  path: /logs
+  path: /usr/local/questionnaire/log
   level:
     cn.ipanel.questionnaireserver.dao: debug
     io:
@@ -58,6 +58,3 @@ ftp:
   port: 21
   username: ipanel
   password: www.iPanel.cn
-  remotePath: # ftp服务器存放文件的路径
-  localDir: #本地需要上传的文件的路径
-  downDir: #下载文件时，存放在本地的路径

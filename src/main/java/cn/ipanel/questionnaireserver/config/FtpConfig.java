@@ -34,19 +34,4 @@ public class FtpConfig {
      * ftp服务器密码
      */
     private String password;
-
-    /**
-     * ftp服务器存放文件的路径
-     */
-    private String remotePath;
-
-    /**
-     * 本地需要上传的文件的路径
-     */
-    private String localDir;
-
-    /**
-     * 下载文件时，存放在本地的路径
-     */
-    private String downDir;
 }

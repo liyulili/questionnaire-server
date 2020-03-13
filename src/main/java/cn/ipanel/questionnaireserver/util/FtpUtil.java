@@ -34,7 +34,7 @@ public class FtpUtil {
         try {
             boolean isConnection = ftp.openConnection(ftpUrl, ftpPort, ftpUsername, ftpPassword);
             if (isConnection) {
-                boolean isSuccess = ftp.upload(ftpRemotePath, ftpLocalDir + File.pathSeparator + fileName);
+                boolean isSuccess = ftp.upload(ftpRemotePath, ftpLocalDir);
                 if (isSuccess) {
                     log.info("文件上传成功！");
                     result = true;
@@ -226,26 +226,28 @@ public class FtpUtil {
      * @throws IOException
      */
     public boolean createDirectory(String remote, FTPClient ftpClient) throws IOException {
-        String directory = remote.substring(0, remote.lastIndexOf(File.pathSeparator) + 1);
-        if (!directory.equalsIgnoreCase(File.pathSeparator) && !ftpClient.changeWorkingDirectory(directory)) {
+        String directory = remote.substring(0, remote.lastIndexOf("/") + 1);
+        System.out.println("directory = " + directory);
+        if (!directory.equalsIgnoreCase("/") && !ftpClient.changeWorkingDirectory(directory)) {
             int start = 0;
             int end = 0;
-            if (directory.startsWith(File.pathSeparator)) {
+            if (directory.startsWith("/")) {
                 start = 1;
             }
-            end = directory.indexOf(File.pathSeparator, start);
+            end = directory.indexOf("/", start);
             while (true) {
                 String subDirectory = remote.substring(start, end);
                 if (!ftpClient.changeWorkingDirectory(subDirectory)) {
                     if (ftpClient.makeDirectory(subDirectory)) {
                         ftpClient.changeWorkingDirectory(subDirectory);
+                        System.out.println("WorkingDirectory = " + ftpClient.printWorkingDirectory());
                     } else {
                         System.err.println("创建目录失败");
                         return false;
                     }
                 }
                 start = end + 1;
-                end = directory.indexOf(File.pathSeparator, start);
+                end = directory.indexOf("/", start);
                 if (end <= start) {
                     break;
                 }
@@ -262,111 +264,57 @@ public class FtpUtil {
      * @throws IOException 异常
      */
     public boolean upload(String remotePath, String localPath) throws IOException {
+        System.out.println("remotePath = " + remotePath);
+        BufferedInputStream inStream = null;
         // 进入被动模式
-        mFTPClient.enterLocalPassiveMode();
+//        mFTPClient.enterLocalPassiveMode();
         // 以二进制进行传输数据
-        mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
         File localFile = new File(localPath);
         if (!localFile.exists()) {
             System.err.println("本地文件不存在");
             return false;
         }
         String fileName = localFile.getName();
-        if (remotePath.contains(File.separator)) {
+        if (remotePath.contains("/")) {
             boolean isCreateOk = createDirectory(remotePath, mFTPClient);
             if (!isCreateOk) {
                 System.err.println("文件夹创建失败");
                 return false;
             }
         }
-
-        // 列出ftp服务器上的文件
-        FTPFile[] ftpFiles = mFTPClient.listFiles(remotePath);
-        long remoteSize = 0L;
-        String remoteFilePath = remotePath + File.pathSeparator + fileName;
-        if (ftpFiles.length > 0) {
-            FTPFile mFtpFile = null;
-            for (FTPFile ftpFile : ftpFiles) {
-                if (ftpFile.getName().endsWith(fileName)) {
-                    mFtpFile = ftpFile;
-                    break;
-                }
-            }
-            if (mFtpFile != null) {
-                remoteSize = mFtpFile.getSize();
-                if (remoteSize == localFile.length()) {
-                    System.err.println("文件已经上传成功");
-                    return true;
-                }
-                if (remoteSize > localFile.length()) {
-                    if (!mFTPClient.deleteFile(remoteFilePath)) {
-                        System.err.println("服务端文件操作失败");
-                    } else {
-                        boolean isUpload = uploadFile(remoteFilePath, localFile, 0);
-                        System.err.println("是否上传成功：" + isUpload);
-                    }
-                    return true;
-                }
-                if (!uploadFile(remoteFilePath, localFile, remoteSize)) {
-                    System.err.println("文件上传成功");
-                    return true;
-                } else {
-                    // 断点续传失败删除文件，重新上传
-                    if (!mFTPClient.deleteFile(remoteFilePath)) {
-                        System.err.println("服务端文件操作失败");
-                    } else {
-                        boolean isUpload = uploadFile(remoteFilePath, localFile, 0);
-                        System.err.println("是否上传成功：" + isUpload);
-                    }
-                    return true;
-                }
-            }
-        }
-
-        boolean isUpload = uploadFile(remoteFilePath, localFile, remoteSize);
-        System.err.println("是否上传成功：" + isUpload);
-        return isUpload;
+        inStream = new BufferedInputStream(new FileInputStream(localPath));
+        mFTPClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+        System.out.println("mFTPClient = " + mFTPClient.printWorkingDirectory());
+        boolean storeFile = mFTPClient.storeFile(fileName, inStream);
+        System.err.println("是否上传成功：" + storeFile);
+        return storeFile;
     }
 
-    /**
-     * 上传文件
-     *
-     * @param remoteFile 包含文件名的地址
-     * @param localFile  本地文件
-     * @param remoteSize 服务端已经存在的文件大小
-     * @return 是否上传成功
-     * @throws IOException
-     */
-    private boolean uploadFile(String remoteFile, File localFile, long remoteSize) throws IOException {
-        long step = localFile.length() / 10;
-        long process = 0;
-        long readByteSize = 0;
-        RandomAccessFile randomAccessFile = new RandomAccessFile(localFile, "r");
-        OutputStream os = mFTPClient.appendFileStream(remoteFile);
-        if (remoteSize > 0) {
-            // 已经上传一部分的时候就要进行断点续传
-            process = remoteSize / step;
-            readByteSize = remoteSize;
-            randomAccessFile.seek(remoteSize);
-            mFTPClient.setRestartOffset(remoteSize);
+    public boolean uploadFile(String remotePath, String localPath, String remoteFileName) throws IOException {
+        System.out.println("remotePath = " + remotePath);
+        BufferedInputStream inStream = null;
+        // 进入被动模式
+        mFTPClient.enterLocalPassiveMode();
+        // 以二进制进行传输数据
+        File localFile = new File(localPath);
+        if (!localFile.exists()) {
+            System.err.println("本地文件不存在");
+            return false;
         }
-        byte[] buffers = new byte[1024];
-        int len = -1;
-        while ((len = randomAccessFile.read(buffers)) != -1) {
-            os.write(buffers, 0, len);
-            readByteSize += len;
-            long newProcess = readByteSize / step;
-            if (newProcess > process) {
-                process = newProcess;
-                System.err.println("当前上传进度为：" + process);
+        if (remotePath.contains("/")) {
+            boolean isCreateOk = createDirectory(remotePath, mFTPClient);
+            if (!isCreateOk) {
+                System.err.println("文件夹创建失败");
+                return false;
             }
         }
-        os.flush();
-        randomAccessFile.close();
-        os.close();
-        boolean result = mFTPClient.completePendingCommand();
-        return result;
+        inStream = new BufferedInputStream(new FileInputStream(localPath));
+        mFTPClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+        boolean storeFile = mFTPClient.storeFile(remoteFileName, inStream);
+        System.err.println("是否上传成功：" + storeFile);
+        return storeFile;
     }
+
 
     /**
      * 删除目录
@@ -388,7 +336,7 @@ public class FtpUtil {
             for (FTPFile ftpFile : ftpFileArr) {
                 String fileName = ftpFile.getName();
                 if (ftpFile.isDirectory()) {
-                    deleteDirectory(ftpClient, remoteDirPath + File.pathSeparator + fileName);
+                    deleteDirectory(ftpClient, remoteDirPath + "/" + fileName);
                 } else {
                     deleteFile(ftpClient, remoteDirPath + '/' + fileName);
                 }
@@ -442,16 +390,16 @@ public class FtpUtil {
      */
     private static boolean existDir(FTPClient ftpClient, String path) throws IOException {
         String dirPath;
-        if (!File.pathSeparator.equals(path) && path.endsWith(File.pathSeparator)) {
-            path = path.substring(0, path.lastIndexOf(File.pathSeparator));
+        if (!"/".equals(path) && path.endsWith("/")) {
+            path = path.substring(0, path.lastIndexOf("/"));
         }
-        if (path.lastIndexOf(File.pathSeparator) == 0) {
+        if (path.lastIndexOf("/") == 0) {
             return true;
         } else {
-            dirPath = path.substring(0, path.lastIndexOf(File.pathSeparator));
+            dirPath = path.substring(0, path.lastIndexOf("/"));
         }
 
-        String dirName = path.substring(path.lastIndexOf(File.pathSeparator) + 1);
+        String dirName = path.substring(path.lastIndexOf("/") + 1);
         FTPFile[] ftpFiles = ftpClient.listDirectories(new String(dirPath.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1));
         for (FTPFile ftpFile : ftpFiles) {
             if (ftpFile.getName().trim().equals(dirName)) {
@@ -473,9 +421,9 @@ public class FtpUtil {
         boolean flag = false;
         log.info("Begin delete FTP File: {}", remoteFilePath);
         try {
-            if (remoteFilePath.endsWith(File.separator)
-                    || !existFile(ftpClient, remoteFilePath.substring(0, remoteFilePath.lastIndexOf(File.separator)),
-                    remoteFilePath.substring(remoteFilePath.lastIndexOf(File.pathSeparator) + 1, remoteFilePath.length()))) {
+            if (remoteFilePath.endsWith("/")
+                    || !existFile(ftpClient, remoteFilePath.substring(0, remoteFilePath.lastIndexOf("/")),
+                    remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1, remoteFilePath.length()))) {
                 log.info("Target File: {} is not exist in ftp or is not a file", remoteFilePath);
                 return false;
             }
@@ -492,4 +440,5 @@ public class FtpUtil {
         }
         return flag;
     }
+
 }

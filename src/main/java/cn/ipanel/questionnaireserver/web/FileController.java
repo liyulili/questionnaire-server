@@ -1,18 +1,24 @@
 package cn.ipanel.questionnaireserver.web;
 
 import cn.ipanel.questionnaireserver.config.FtpConfig;
+import cn.ipanel.questionnaireserver.constant.FtpConstant;
+import cn.ipanel.questionnaireserver.util.FileUtil;
 import cn.ipanel.questionnaireserver.util.FtpUtil;
 import cn.ipanel.questionnaireserver.vo.R;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
+
+import static cn.ipanel.questionnaireserver.constant.FtpConstant.remotePath;
 
 /**
  * @author liyu
@@ -20,47 +26,55 @@ import java.util.UUID;
  * @description 文件上传，下载类接口
  */
 @RestController
+@RequestMapping("/ftp")
 public class FileController {
-
-
-    private static String remotePath = "/questionnaire/upload/";
-    private static String address = "http://192.168.37.50:8070/partybuilding/";
 
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:mm:ss");
 
     @Autowired
     FtpConfig ftpConfig;
 
-    @PostMapping("/upload")
-    public R singleFileUpload(MultipartFile multipartFile) throws IOException {
+    @PostMapping("/uploadFile")
+    public R singleFileUpload(MultipartFile multipartFile) {
+        //获取本地temp目录
+        File dir = FileUtil.getTempDir(null);
+        File file = FileUtil.saveMultipartFile(null, multipartFile, dir);
 
-        //指定暂时存放文件的目录
-        String tempFileDir = FtpUtil.class.getResource("/").getPath()+"uploadTemp";
-        System.out.println("tempFileDir = " + tempFileDir);
-        File dir = new File(tempFileDir);
-        //判断目录是否存在，不存在则创建目录
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        //生成新文件名，防止文件名重复而导致文件覆盖
-        //1、获取原文件后缀名 .img .jpg ....
-        String originalFilename = multipartFile.getOriginalFilename();
-        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
-        //2、使用UUID生成新文件名
-        String newFileName = UUID.randomUUID() + suffix;
-        //3、生成文件 C:\ftpfile\img\sdasdasd.jpg
-        File file = new File(dir, newFileName);
-        //4、传输内容
-        multipartFile.transferTo(file);
         //5、上传至ftp服务器
-        boolean b = FtpUtil.ftpUpload(newFileName, ftpConfig.getUrl(), ftpConfig.getPort(), ftpConfig.getUsername(), ftpConfig.getPassword(), file.getPath(), remotePath);
+        boolean b = FtpUtil.ftpUpload(file.getName(), ftpConfig.getUrl(), ftpConfig.getPort(), ftpConfig.getUsername(), ftpConfig.getPassword(), file.getPath(), remotePath);
         System.out.println("b = " + b);
         //6、删除本地文件
+        String fileName = file.getName();
         boolean delete = file.delete();
+        //ToDo 文件不知道为什么一直删除失败
         System.out.println("delete = " + delete);
-        return R.ok(address.substring(0, address.length() - 1) + remotePath + newFileName);
+        if (b) {
+            return R.ok(FtpConstant.address.substring(0, FtpConstant.address.length() - 1) + remotePath + fileName);
+        } else {
+            return R.error();
+        }
     }
 
+    @PostMapping("/uploadFiles")
+    public R MluFileUpload(MultipartFile[] multipartFiles) throws IOException {
+        List<String> paths = new ArrayList<>();
+        //获取本地temp目录
+        File dir = FileUtil.getTempDir(null);
+        for (MultipartFile multipartFile : multipartFiles) {
 
+            File file = FileUtil.saveMultipartFile(null, multipartFile, dir);
+            //5、上传至ftp服务器
+            boolean b = FtpUtil.ftpUpload(file.getName(), ftpConfig.getUrl(), ftpConfig.getPort(), ftpConfig.getUsername(), ftpConfig.getPassword(), file.getPath(), remotePath);
+            System.out.println("b = " + b);
+            String fileName = file.getName();
+            boolean delete = file.delete();
+            if (b) {
+                paths.add(FtpConstant.address.substring(0, FtpConstant.address.length() - 1) + remotePath + fileName);
+
+            } else {
+                return R.error();
+            }
+        }
+        return R.ok(paths);
+    }
 }
